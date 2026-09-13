@@ -1,301 +1,833 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>World Best Image Text Editor</title>
-    <!-- Tesseract.js for OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <style>
-        :root {
-            --primary: #6c5ce7;
-            --secondary: #00cec9;
-            --bg: #1e272e;
-            --card: #2d3436;
-            --text: #dfe6e9;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h1 {
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-        .container {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .panel {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .canvas-panel { flex: 2; min-width: 300px; text-align: center; }
-        .text-panel { flex: 1; min-width: 250px; max-height: 600px; overflow-y: auto; }
-        
-        canvas {
-            max-width: 100%;
-            border-radius: 10px;
-            border: 2px solid var(--primary);
-            background: #000;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: transform 0.2s;
-            margin: 10px 5px;
-        }
-        .btn:hover { transform: translateY(-2px); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fast HD Image Text Editor</title>
 
-        .word-item {
-            background: #353b48;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid var(--secondary);
-        }
-        .word-item span { font-size: 14px; word-break: break-all; }
-        .word-item input {
-            background: #2d3436;
-            border: 1px solid var(--primary);
-            color: white;
-            padding: 5px;
-            border-radius: 4px;
-            width: 60%;
-        }
-        .word-item button {
-            background: var(--secondary);
-            border: none;
-            color: black;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Open+Sans:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Montserrat:wght@400;600;700;800&family=Lato:wght@400;700;900&family=Inter:wght@400;600;700;800&family=Oswald:wght@400;600;700&family=Playfair+Display:wght@400;600;700;800&family=Merriweather:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 
-        #loader {
-            display: none;
-            margin: 20px;
-            font-size: 18px;
-            color: var(--secondary);
-        }
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.1);
-            border-left-color: var(--secondary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+  <!-- OCR Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    header {
+      padding: 24px 16px 8px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      background: linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sub {
+      color: #94a3b8;
+      margin: 8px 0 0;
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      background: rgba(15,23,42,.6);
+      border-bottom: 1px solid rgba(148,163,184,.15);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+
+    button, select, input[type="number"], input[type="color"] {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg,#06b6d4,#8b5cf6);
+      border: none;
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    label.control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    input[type="checkbox"] {
+      accent-color: #22d3ee;
+      transform: scale(1.15);
+    }
+
+    input:disabled, select:disabled {
+      opacity: .45;
+    }
+
+    #status {
+      text-align: center;
+      padding: 10px 16px;
+      color: #7dd3fc;
+      min-height: 22px;
+      font-size: 14px;
+    }
+
+    .stage {
+      position: relative;
+      margin: 18px auto 60px;
+      max-width: min(1200px, 96vw);
+      display: none;
+    }
+
+    #canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 18px;
+      background: #0b1220;
+      box-shadow: 0 20px 70px rgba(0,0,0,.4);
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+    }
+
+    .textBox {
+      position: absolute;
+      border: 2px dashed rgba(34,211,238,.88);
+      background: rgba(34,211,238,.08);
+      cursor: text;
+      border-radius: 6px;
+      transition: background .15s;
+    }
+
+    .textBox:hover {
+      background: rgba(34,211,238,.18);
+    }
+
+    .textBox.edited {
+      border-color: #fbbf24;
+      background: rgba(251,191,36,.10);
+    }
+
+    .inlineEditor {
+      position: absolute;
+      z-index: 30;
+      border: 2px solid #22d3ee;
+      background: rgba(2,6,23,.96);
+      color: #fff;
+      border-radius: 10px;
+      padding: 4px 8px;
+      outline: none;
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
+      min-width: 180px;
+    }
+
+    .hint {
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 10px;
+      padding: 0 16px 30px;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>🌟 World Best Image Text Editor 🌟</h1>
-    <p>Upload image, detect text, edit it, and download!</p>
+  <header>
+    <h1>⚡ Fast HD Image Text Editor</h1>
+    <p class="sub">Upload karo → text box par click karo → usi page par edit karo → HD download karo</p>
+  </header>
 
-    <input type="file" id="imageInput" accept="image/*" style="display: none;">
-    <button class="btn" onclick="document.getElementById('imageInput').click()">📂 Upload Image</button>
-    <button class="btn" id="downloadBtn" onclick="downloadImage()" disabled>💾 Download Edited Image</button>
+  <div class="toolbar">
+    <input type="file" id="fileInput" accept="image/*" hidden>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p>AI Text Detect kar raha hai... Please wait...</p>
-    </div>
+    <button class="primary" id="uploadBtn">📂 Upload Image</button>
 
-    <div class="container">
-        <div class="panel canvas-panel">
-            <canvas id="mainCanvas"></canvas>
-        </div>
-        <div class="panel text-panel">
-            <h3>📝 Detected Text (Edit Here)</h3>
-            <div id="textList">
-                <p style="color: #888; text-align: center;">Image upload karne ke baad text yahan dikhega.</p>
-            </div>
-        </div>
-    </div>
+    <select id="langSelect" title="OCR language">
+      <option value="eng">Fast English</option>
+      <option value="eng+hin">English + Hindi (slower)</option>
+      <option value="hin">Hindi (slower)</option>
+    </select>
 
-    <script>
-        const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d');
-        const imageInput = document.getElementById('imageInput');
-        const loader = document.getElementById('loader');
-        const textList = document.getElementById('textList');
-        const downloadBtn = document.getElementById('downloadBtn');
-        
-        let originalImage = null;
-        let wordsData = []; // Store detected words and their bounding boxes
+    <select id="fontSelect" title="Font">
+      <option value="auto">Auto Font (Roboto)</option>
+      <option value="Roboto">Roboto</option>
+      <option value="Open Sans">Open Sans</option>
+      <option value="Poppins">Poppins</option>
+      <option value="Montserrat">Montserrat</option>
+      <option value="Lato">Lato</option>
+      <option value="Inter">Inter</option>
+      <option value="Oswald">Oswald</option>
+      <option value="Bebas Neue">Bebas Neue</option>
+      <option value="Playfair Display">Playfair Display</option>
+      <option value="Merriweather">Merriweather</option>
+      <option value="Arial">Arial</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Impact">Impact</option>
+    </select>
 
-        // 1. Image Upload Handler
-        imageInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+    <label class="control">
+      <input type="checkbox" id="autoColor" checked>
+      Auto Text Color
+    </label>
+    <input type="color" id="fgColor" value="#000000" disabled>
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    originalImage = img;
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    
-                    // Start OCR
-                    processImage(img);
-                }
-                img.src = event.target.result;
+    <label class="control">
+      <input type="checkbox" id="autoBg" checked>
+      Auto BG Fill
+    </label>
+    <input type="color" id="bgColor" value="#ffffff" disabled>
+
+    <label class="control">
+      <input type="checkbox" id="autoSize" checked>
+      Auto Size
+    </label>
+    <input type="number" id="fontSize" value="32" min="6" style="width:80px" disabled>
+
+    <select id="weightSelect">
+      <option value="auto">Auto Weight</option>
+      <option value="400">Regular</option>
+      <option value="600">Semi Bold</option>
+      <option value="700">Bold</option>
+      <option value="900">Black</option>
+    </select>
+
+    <select id="alignSelect">
+      <option value="center">Center Align</option>
+      <option value="left">Left Align</option>
+      <option value="right">Right Align</option>
+    </select>
+
+    <button id="resetBtn">↩️ Reset</button>
+    <button id="downloadBtn" class="primary" disabled>⬇️ Download HD</button>
+  </div>
+
+  <div id="status">Image upload karo.</div>
+
+  <div class="stage" id="stage">
+    <canvas id="canvas"></canvas>
+    <div id="overlay"></div>
+  </div>
+
+  <div class="hint">
+    Tip: Exact same font browser automatically 100% guess nahi kar sakta. Font dropdown se closest font choose karo; color/size auto match hota hai.
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    const canvas = $('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    const originalCanvas = document.createElement('canvas');
+    const originalCtx = originalCanvas.getContext('2d', { willReadFrequently: true });
+
+    let originalImage = null;
+    let lines = [];
+    let edits = new Map();
+
+    // ---------------- UI helpers ----------------
+    function setStatus(msg) {
+      $('status').textContent = msg;
+    }
+
+    function toggleInputs() {
+      $('fgColor').disabled = $('autoColor').checked;
+      $('bgColor').disabled = $('autoBg').checked;
+      $('fontSize').disabled = $('autoSize').checked;
+    }
+
+    toggleInputs();
+
+    // ---------------- Upload ----------------
+    $('uploadBtn').addEventListener('click', () => $('fileInput').click());
+
+    $('fileInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = () => {
+        originalImage = img;
+
+        canvas.width = originalCanvas.width = img.width;
+        canvas.height = originalCanvas.height = img.height;
+
+        originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+        originalCtx.drawImage(img, 0, 0);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+
+        lines = [];
+        edits.clear();
+
+        $('stage').style.display = 'block';
+        $('downloadBtn').disabled = false;
+
+        renderOverlay();
+        setStatus('Image loaded. Text detect ho raha hai...');
+        detectText();
+
+        URL.revokeObjectURL(url);
+      };
+
+      img.onerror = () => {
+        setStatus('Image load nahi hui.');
+        URL.revokeObjectURL(url);
+      };
+
+      img.src = url;
+      e.target.value = '';
+    });
+
+    // ---------------- OCR ----------------
+    $('langSelect').addEventListener('change', () => {
+      if (originalImage) detectText();
+    });
+
+    async function detectText() {
+      if (!originalImage) return;
+
+      lines = [];
+      edits.clear();
+      renderOverlay();
+      setStatus('OCR prepare ho raha hai...');
+
+      const lang = $('langSelect').value;
+
+      // Speed ke liye OCR downscale, output original HD rahega
+      const maxSide = 1800;
+      const scale = Math.min(1, maxSide / Math.max(originalCanvas.width, originalCanvas.height));
+
+      const ocrCanvas = document.createElement('canvas');
+      ocrCanvas.width = Math.max(1, Math.round(originalCanvas.width * scale));
+      ocrCanvas.height = Math.max(1, Math.round(originalCanvas.height * scale));
+
+      const octx = ocrCanvas.getContext('2d');
+      octx.fillStyle = '#ffffff';
+      octx.fillRect(0, 0, ocrCanvas.width, ocrCanvas.height);
+      octx.drawImage(originalImage, 0, 0, ocrCanvas.width, ocrCanvas.height);
+
+      try {
+        const result = await Tesseract.recognize(ocrCanvas, lang, {
+          logger: m => {
+            if (m.status === 'recognizing text') {
+              setStatus(`Text detect ho raha hai... ${Math.round((m.progress || 0) * 100)}%`);
             }
-            reader.readAsDataURL(file);
+          }
         });
 
-        // 2. OCR Processing (Tesseract.js)
-        async function processImage(img) {
-            loader.style.display = 'block';
-            textList.innerHTML = '';
-            wordsData = [];
+        let extracted = extractLines(result.data);
 
-            try {
-                const result = await Tesseract.recognize(img, 'eng+hin', {
-                    logger: m => console.log(m) // Progress log
-                });
-                
-                const words = result.data.words;
-                
-                // Filter out low confidence words and empty spaces
-                wordsData = words.filter(w => w.confidence > 40 && w.text.trim() !== '');
-                
-                renderTextList();
-                drawCanvas();
-                downloadBtn.disabled = false;
-            } catch (error) {
-                console.error(error);
-                alert("Text detect karne mein error aaya. Please clear image try karein.");
-            } finally {
-                loader.style.display = 'none';
+        if (scale !== 1) {
+          extracted = extracted.map(l => ({
+            ...l,
+            bbox: {
+              x0: l.bbox.x0 / scale,
+              y0: l.bbox.y0 / scale,
+              x1: l.bbox.x1 / scale,
+              y1: l.bbox.y1 / scale
             }
+          }));
         }
 
-        // 3. Render Detected Text in Sidebar
-        function renderTextList() {
-            textList.innerHTML = '';
-            if (wordsData.length === 0) {
-                textList.innerHTML = '<p style="color: #888; text-align: center;">Koi text detect nahi hua.</p>';
-                return;
-            }
+        lines = extracted.filter(l => (l.confidence ?? 60) > 25);
 
-            wordsData.forEach((word, index) => {
-                const div = document.createElement('div');
-                div.className = 'word-item';
-                
-                div.innerHTML = `
-                    <input type="text" id="input_${index}" value="${word.text}" />
-                    <button onclick="updateWord(${index})">Update</button>
-                `;
-                textList.appendChild(div);
-            });
+        renderOverlay();
+        renderCanvas();
+
+        setStatus(
+          lines.length
+            ? `${lines.length} text areas detect hue. Click any dashed box to edit.`
+            : 'No text detected. Try better/clear image or change language option.'
+        );
+      } catch (err) {
+        console.error(err);
+        setStatus('OCR error: ' + (err?.message || err));
+      }
+    }
+
+    function extractLines(data) {
+      if (Array.isArray(data.lines) && data.lines.length) {
+        return data.lines.filter(l => l && l.text && l.text.trim() && l.bbox);
+      }
+
+      const words = (data.words || []).filter(w => w && w.text && w.text.trim() && w.bbox);
+      const groups = [];
+
+      words.forEach(w => {
+        const cy = (w.bbox.y0 + w.bbox.y1) / 2;
+        const h = Math.max(1, w.bbox.y1 - w.bbox.y0);
+
+        let g = groups.find(gr =>
+          Math.abs(gr.cy - cy) <= Math.max(8, gr.h * 0.65, h * 0.65)
+        );
+
+        if (!g) {
+          g = { cy, h, words: [] };
+          groups.push(g);
         }
 
-        // 4. Update Word Logic
-        window.updateWord = function(index) {
-            const input = document.getElementById(`input_${index}`);
-            wordsData[index].text = input.value;
-            drawCanvas();
+        g.cy = (g.cy * g.words.length + cy) / (g.words.length + 1);
+        g.h = Math.max(g.h, h);
+        g.words.push(w);
+      });
+
+      return groups.map(g => {
+        g.words.sort((a, b) => a.bbox.x0 - b.bbox.x0);
+
+        const bbox = {
+          x0: Math.min(...g.words.map(w => w.bbox.x0)),
+          y0: Math.min(...g.words.map(w => w.bbox.y0)),
+          x1: Math.max(...g.words.map(w => w.bbox.x1)),
+          y1: Math.max(...g.words.map(w => w.bbox.y1))
+        };
+
+        const confidence = g.words.reduce(
+          (min, w) => Math.min(min, w.confidence ?? 100),
+          100
+        );
+
+        return {
+          text: g.words.map(w => w.text.trim()).join(' '),
+          bbox,
+          confidence
+        };
+      }).filter(l => l.text.trim());
+    }
+
+    // ---------------- Overlay boxes ----------------
+    function renderOverlay() {
+      const overlay = $('overlay');
+      overlay.innerHTML = '';
+
+      lines.forEach((line, i) => {
+        const bw = line.bbox.x1 - line.bbox.x0;
+        const bh = line.bbox.y1 - line.bbox.y0;
+
+        if (bw <= 0 || bh <= 0) return;
+
+        const box = document.createElement('div');
+        box.className = 'textBox' + (edits.has(i) ? ' edited' : '');
+        box.dataset.index = i;
+
+        box.style.left = (line.bbox.x0 / canvas.width * 100) + '%';
+        box.style.top = (line.bbox.y0 / canvas.height * 100) + '%';
+        box.style.width = (bw / canvas.width * 100) + '%';
+        box.style.height = (bh / canvas.height * 100) + '%';
+
+        box.title = (edits.get(i)?.text ?? line.text).trim() || 'Empty text';
+
+        box.addEventListener('click', ev => {
+          ev.stopPropagation();
+          openEditor(i, box);
+        });
+
+        overlay.appendChild(box);
+      });
+    }
+
+    function markBoxEdited(index) {
+      const box = document.querySelector(`.textBox[data-index="${index}"]`);
+      if (box) {
+        box.classList.add('edited');
+        box.title = edits.get(index)?.text || 'Empty';
+      }
+    }
+
+    // ---------------- Inline editing ----------------
+    function openEditor(index, box) {
+      document.querySelectorAll('.inlineEditor').forEach(el => el.remove());
+
+      const line = lines[index];
+      if (!line) return;
+
+      const edit = edits.get(index);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'inlineEditor';
+      input.value = edit ? edit.text : line.text.trim();
+
+      input.style.left = box.offsetLeft + 'px';
+      input.style.top = Math.max(0, box.offsetTop - 10) + 'px';
+      input.style.width = Math.max(200, box.offsetWidth + 70) + 'px';
+      input.style.height = Math.max(38, box.offsetHeight + 14) + 'px';
+      input.style.fontSize = Math.max(15, box.offsetHeight * 0.58) + 'px';
+
+      $('stage').appendChild(input);
+      input.focus();
+      input.select();
+
+      let done = false;
+
+      const commit = () => {
+        if (done) return;
+        done = true;
+        applyEdit(index, input.value);
+        if (input.parentNode) input.remove();
+      };
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') {
+          done = true;
+          input.remove();
         }
+      });
 
-        // 5. Redraw Canvas with Edited Text
-        function drawCanvas() {
-            if (!originalImage) return;
-            
-            // Draw original image first
-            ctx.drawImage(originalImage, 0, 0);
+      input.addEventListener('blur', commit);
+    }
 
-            // Loop through all words and replace them
-            wordsData.forEach(word => {
-                const { bbox, text } = word;
-                const x = bbox.x0;
-                const y = bbox.y0;
-                const w = bbox.x1 - bbox.x0;
-                const h = bbox.y1 - bbox.y0;
+    function applyEdit(index, text) {
+      const line = lines[index];
+      if (!line) return;
 
-                // A. Sample background color from the original image
-                const bgColor = getAverageColor(x, y, w, h);
-                
-                // B. Fill the bounding box with background color (erase old text)
-                ctx.fillStyle = bgColor;
-                ctx.fillRect(x, y, w, h);
+      const settings = buildSettings(line);
 
-                // C. Draw new text
-                ctx.fillStyle = '#000000'; // Default black text (can be improved with color sampling)
-                ctx.font = `bold ${h * 0.8}px Arial`;
-                ctx.textBaseline = 'top';
-                
-                // Adjust text position to fit nicely
-                const textY = y + (h * 0.1);
-                ctx.fillText(text, x, textY);
-            });
+      edits.set(index, {
+        text: text.trim(),
+        ...settings
+      });
+
+      renderCanvas();
+      markBoxEdited(index);
+    }
+
+    // ---------------- Style building ----------------
+    function buildSettings(line) {
+      if (!line._colors) {
+        line._colors = getAutoColors(line);
+      }
+
+      const colors = line._colors;
+      const h = Math.max(1, line.bbox.y1 - line.bbox.y0);
+
+      let fontFamily = $('fontSelect').value;
+      if (fontFamily === 'auto') fontFamily = 'Roboto';
+
+      const autoSize = $('autoSize').checked;
+      const customSize = parseFloat($('fontSize').value);
+
+      const fontSize = autoSize
+        ? Math.max(10, Math.round(h * 0.82))
+        : (customSize || Math.max(10, Math.round(h * 0.82)));
+
+      let weight = $('weightSelect').value;
+      if (weight === 'auto') {
+        weight = h > 24 ? '700' : '600';
+      }
+
+      const fg = $('autoColor').checked ? colors.fg : $('fgColor').value;
+      const bg = $('autoBg').checked ? colors.bg : $('bgColor').value;
+
+      return {
+        fontFamily,
+        fontSize,
+        weight,
+        fg,
+        bg,
+        align: $('alignSelect').value
+      };
+    }
+
+    // ---------------- Color detection ----------------
+    function getAutoColors(line) {
+      const bbox = line.bbox;
+
+      const x = Math.max(0, Math.floor(bbox.x0));
+      const y = Math.max(0, Math.floor(bbox.y0));
+
+      const w = Math.min(originalCanvas.width - x, Math.floor(bbox.x1 - bbox.x0));
+      const h = Math.min(originalCanvas.height - y, Math.floor(bbox.y1 - bbox.y0));
+
+      if (w <= 2 || h <= 2) {
+        return { bg: '#ffffff', fg: '#000000' };
+      }
+
+      const pad = Math.max(2, Math.floor(Math.min(w, h) * 0.15));
+
+      const sx = Math.max(0, x - pad);
+      const sy = Math.max(0, y - pad);
+      const sw = Math.min(originalCanvas.width - sx, w + pad * 2);
+      const sh = Math.min(originalCanvas.height - sy, h + pad * 2);
+
+      if (sw <= 0 || sh <= 0) {
+        return { bg: '#ffffff', fg: '#000000' };
+      }
+
+      let data;
+      try {
+        data = originalCtx.getImageData(sx, sy, sw, sh).data;
+      } catch (e) {
+        return { bg: '#ffffff', fg: '#000000' };
+      }
+
+      let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
+      const innerPixels = [];
+
+      for (let py = 0; py < sh; py++) {
+        const gy = sy + py;
+
+        for (let px = 0; px < sw; px++) {
+          const gx = sx + px;
+          const idx = (py * sw + px) * 4;
+
+          const r = data[idx];
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+          const a = data[idx + 3];
+
+          if (a < 15) continue;
+
+          const inside = gx >= x && gx < x + w && gy >= y && gy < y + h;
+
+          if (!inside) {
+            bgR += r;
+            bgG += g;
+            bgB += b;
+            bgCount++;
+          } else {
+            innerPixels.push([r, g, b]);
+          }
         }
+      }
 
-        // Helper: Get average background color of a specific region
-        function getAverageColor(x, y, w, h) {
-            // Ensure coordinates are within bounds
-            x = Math.max(0, Math.floor(x));
-            y = Math.max(0, Math.floor(y));
-            w = Math.min(canvas.width - x, Math.ceil(w));
-            h = Math.min(canvas.height - y, Math.ceil(h));
+      if (bgCount === 0) {
+        bgR = 255;
+        bgG = 255;
+        bgB = 255;
+        bgCount = 1;
+      }
 
-            if (w <= 0 || h <= 0) return '#ffffff';
+      const bg = {
+        r: bgR / bgCount,
+        g: bgG / bgCount,
+        b: bgB / bgCount
+      };
 
-            const imageData = ctx.getImageData(x, y, w, h);
-            let r = 0, g = 0, b = 0, count = 0;
+      let fgR = 0, fgG = 0, fgB = 0, fgCount = 0;
+      const threshold = 28;
 
-            for (let i = 0; i < imageData.data.length; i += 4) {
-                r += imageData.data[i];
-                g += imageData.data[i + 1];
-                b += imageData.data[i + 2];
-                count++;
-            }
+      for (const [r, g, b] of innerPixels) {
+        const dist = Math.sqrt(
+          (r - bg.r) ** 2 +
+          (g - bg.g) ** 2 +
+          (b - bg.b) ** 2
+        );
 
-            r = Math.floor(r / count);
-            g = Math.floor(g / count);
-            b = Math.floor(b / count);
-
-            return `rgb(${r}, ${g}, ${b})`;
+        if (dist > threshold) {
+          fgR += r;
+          fgG += g;
+          fgB += b;
+          fgCount++;
         }
+      }
 
-        // 6. Download Image
-        function downloadImage() {
-            const link = document.createElement('a');
-            link.download = 'edited-image-world-best.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
-    </script>
+      if (fgCount < 5 || fgCount < innerPixels.length * 0.02) {
+        const lum = 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b;
+        return {
+          bg: rgbToHex(bg),
+          fg: lum > 145 ? '#000000' : '#ffffff'
+        };
+      }
+
+      return {
+        bg: rgbToHex(bg),
+        fg: rgbToHex({
+          r: fgR / fgCount,
+          g: fgG / fgCount,
+          b: fgB / fgCount
+        })
+      };
+    }
+
+    function rgbToHex(c) {
+      const to = v => Math.round(Math.max(0, Math.min(255, v)))
+        .toString(16)
+        .padStart(2, '0');
+
+      return `#${to(c.r)}${to(c.g)}${to(c.b)}`;
+    }
+
+    // ---------------- Canvas render ----------------
+    function renderCanvas() {
+      if (!originalImage) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(originalImage, 0, 0);
+
+      edits.forEach((edit, i) => {
+        const line = lines[i];
+        if (line) eraseAndDraw(line, edit);
+      });
+    }
+
+    function eraseAndDraw(line, edit) {
+      const bbox = line.bbox;
+
+      const x = Math.max(0, Math.floor(bbox.x0));
+      const y = Math.max(0, Math.floor(bbox.y0));
+
+      const w = Math.max(1, Math.floor(bbox.x1 - bbox.x0));
+      const h = Math.max(1, Math.floor(bbox.y1 - bbox.y0));
+
+      const pad = Math.max(1, Math.floor(Math.min(w, h) * 0.05));
+
+      const fillX = Math.max(0, x - pad);
+      const fillY = Math.max(0, y - pad);
+      const fillW = Math.min(canvas.width - fillX, w + pad * 2);
+      const fillH = Math.min(canvas.height - fillY, h + pad * 2);
+
+      ctx.fillStyle = edit.bg;
+      ctx.fillRect(fillX, fillY, fillW, fillH);
+
+      if (!edit.text) return;
+
+      let size = edit.fontSize;
+
+      const font = s => `${edit.weight} ${s}px "${edit.fontFamily}", sans-serif`;
+
+      ctx.font = font(size);
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = edit.align;
+
+      const maxWidth = Math.max(10, w * 1.10);
+      const measured = ctx.measureText(edit.text).width;
+
+      if (measured > maxWidth) {
+        size = Math.max(7, size * maxWidth / measured);
+        ctx.font = font(size);
+      }
+
+      let xText;
+      if (edit.align === 'left') xText = x;
+      else if (edit.align === 'right') xText = x + w;
+      else xText = x + w / 2;
+
+      const yText = y + h / 2;
+
+      ctx.fillStyle = edit.fg;
+      ctx.fillText(edit.text, xText, yText);
+    }
+
+    // ---------------- Controls ----------------
+    ['autoColor', 'autoBg', 'autoSize'].forEach(id => {
+      $(id).addEventListener('change', () => {
+        toggleInputs();
+        refreshExistingEdits();
+      });
+    });
+
+    ['fgColor', 'bgColor', 'fontSize', 'weightSelect', 'alignSelect'].forEach(id => {
+      $(id).addEventListener('change', refreshExistingEdits);
+    });
+
+    $('fontSelect').addEventListener('change', async () => {
+      const font = $('fontSelect').value === 'auto' ? 'Roboto' : $('fontSelect').value;
+      await loadFont(font);
+      refreshExistingEdits();
+    });
+
+    async function loadFont(font) {
+      try {
+        await document.fonts.load(`400 24px "${font}"`);
+        await document.fonts.load(`700 24px "${font}"`);
+        await document.fonts.load(`900 24px "${font}"`);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function refreshExistingEdits() {
+      if (!lines.length || edits.size === 0) return;
+
+      edits.forEach((edit, i) => {
+        const line = lines[i];
+        if (!line) return;
+
+        const settings = buildSettings(line);
+
+        edits.set(i, {
+          ...edit,
+          ...settings
+        });
+      });
+
+      renderCanvas();
+    }
+
+    // ---------------- Reset / Download ----------------
+    $('resetBtn').addEventListener('click', () => {
+      edits.clear();
+      renderCanvas();
+      renderOverlay();
+      setStatus('Reset ho gaya.');
+    });
+
+    $('downloadBtn').addEventListener('click', async () => {
+      setStatus('HD download prepare ho raha hai...');
+
+      try {
+        await document.fonts.ready;
+        renderCanvas();
+
+        const a = document.createElement('a');
+        a.download = 'edited-hd.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+
+        setStatus('Download complete ✅');
+      } catch (e) {
+        console.error(e);
+        setStatus('Download error.');
+      }
+    });
+  </script>
 </body>
 </html>
