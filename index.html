@@ -1,334 +1,887 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Text Editor - HD & Fast</title>
-    <style>
-        :root {
-            --primary: #6366f1;
-            --bg: #0f172a;
-            --panel: #1e293b;
-            --text: #f8fafc;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>हिंदी इमेज टेक्स्ट एडिटर - HD, Fast</title>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+  <!-- Hindi/Devanagari Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Hind:wght@400;700&family=Kalam:wght@400;700&family=Khand:wght@400;700&family=Martel:wght@400;700&family=Mukta:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700;900&family=Noto+Serif+Devanagari:wght@400;700&family=Palanquin:wght@400;700&family=Rozha+One&family=Tiro+Devanagari+Hindi&family=Yatra+One&display=swap" rel="stylesheet" />
 
-        /* Sidebar Controls */
-        .sidebar {
-            width: 320px;
-            background-color: var(--panel);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        h2 { margin-top: 0; font-size: 1.2rem; color: var(--primary); }
-        
-        label { font-size: 0.9rem; color: #94a3b8; margin-bottom: 5px; display: block; }
-        
-        input[type="file"], input[type="text"], select, input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            background: #334155;
-            border: 1px solid #475569;
-            color: white;
-            border-radius: 6px;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-        }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      display: flex;
+      min-height: 100vh;
+    }
 
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
+    aside {
+      width: 360px;
+      min-width: 320px;
+      background: #111827;
+      padding: 18px;
+      overflow: auto;
+      border-right: 1px solid #334155;
+    }
 
-        button:hover { background-color: #4f46e5; }
-        button.secondary { background-color: #475569; }
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background:
+        linear-gradient(45deg, #111827 25%, transparent 25%),
+        linear-gradient(-45deg, #111827 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #111827 75%),
+        linear-gradient(-45deg, transparent 75%, #111827 75%);
+      background-size: 28px 28px;
+      background-color: #0b1220;
+    }
 
-        /* Main Workspace */
-        .workspace {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            background-image: radial-gradient(#334155 1px, transparent 1px);
-            background-size: 20px 20px;
-            overflow: auto;
-        }
+    h1 {
+      margin: 0 0 14px;
+      font-size: 20px;
+      line-height: 1.35;
+      color: #93c5fd;
+    }
 
-        canvas {
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            max-width: 90%;
-            max-height: 90%;
-            cursor: crosshair;
-        }
+    h2 {
+      font-size: 14px;
+      color: #cbd5e1;
+      margin: 18px 0 8px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 6px;
+    }
 
-        .instructions {
-            font-size: 0.8rem;
-            color: #cbd5e1;
-            margin-top: 10px;
-            line-height: 1.4;
-        }
-    </style>
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #fff;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    input[type="color"] {
+      padding: 3px;
+      height: 46px;
+      cursor: pointer;
+    }
+
+    input[type="file"] {
+      padding: 8px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #2563eb;
+      border: none;
+      font-weight: 700;
+      transition: 0.15s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+    }
+
+    .btn-secondary {
+      background: #334155;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+    }
+
+    .btn-success {
+      background: #16a34a;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .tool {
+      background: #334155;
+      font-size: 13px;
+      padding: 10px 8px;
+    }
+
+    .tool.active {
+      outline: 2px solid #60a5fa;
+      background: #1d4ed8;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: calc(100vh - 60px);
+      background: #fff;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    #empty {
+      color: #94a3b8;
+      text-align: center;
+      max-width: 420px;
+      line-height: 1.7;
+    }
+
+    .help {
+      margin-top: 16px;
+      background: #172554;
+      border: 1px solid #1e40af;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #dbeafe;
+    }
+
+    .checkline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: #e5e7eb;
+      font-size: 14px;
+    }
+
+    .checkline input {
+      width: auto;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .mt {
+      margin-top: 10px;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+
+      aside {
+        width: 100%;
+        min-width: 100%;
+        max-height: 55vh;
+      }
+
+      main {
+        min-height: 45vh;
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <aside>
+    <h1>हिंदी इमेज टेक्स्ट एडिटर</h1>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>️ Image Text Editor</h2>
-        
-        <div>
-            <label>1. Image Upload Karein</label>
-            <input type="file" id="imageInput" accept="image/*">
-        </div>
+    <h2>1. इमेज अपलोड करें</h2>
+    <input type="file" id="imgInput" accept="image/*" />
 
-        <div>
-            <label>2. Naya Text Likhein</label>
-            <input type="text" id="textInput" placeholder="Yahan text likhein...">
-        </div>
-
-        <div>
-            <label>3. Font Select Karein (Best Match)</label>
-            <select id="fontSelect">
-                <option value="Arial">Arial (Standard)</option>
-                <option value="'Times New Roman'">Times New Roman</option>
-                <option value="'Courier New'">Courier New</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Impact">Impact</option>
-                <option value="'Comic Sans MS'">Comic Sans</option>
-                <option value="Tahoma">Tahoma</option>
-                <option value="Trebuchet MS">Trebuchet MS</option>
-            </select>
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-            <div style="flex:1">
-                <label>Size</label>
-                <input type="number" id="fontSize" value="24">
-            </div>
-            <div style="flex:1">
-                <label>Color</label>
-                <input type="color" id="fontColor" value="#ffffff" style="height: 42px; padding: 2px;">
-            </div>
-        </div>
-
-        <button id="addTextBtn">✨ Text Add/Update Karein</button>
-        <button id="downloadBtn" class="secondary"> HD Download (PNG)</button>
-        
-        <div class="instructions">
-            <strong>Kaise Use Karein:</strong><br>
-            1. Image upload karein.<br>
-            2. Mouse se us area ko select/drag karein jahan purana text hai (Woh area white ho jayega - Inpainting simulation).<br>
-            3. Naya text likhein aur "Add Text" dabayein.<br>
-            4. Font aur Size adjust karke perfect match banayein.
-        </div>
+    <h2>2. टूल्स</h2>
+    <div class="tools">
+      <button id="modeSelect" class="tool active">✋ टेक्स्ट चुनें / मूव करें</button>
+      <button id="modeErase" class="tool">🧽 टेक्स्ट हटाएँ</button>
+      <button id="modePick" class="tool">🎨 कलर पिक करें</button>
+      <button id="undoBtn" class="tool btn-secondary">↩️ Undo</button>
     </div>
 
-    <!-- Workspace -->
-    <div class="workspace" id="workspace">
-        <canvas id="canvas"></canvas>
-        <div id="placeholder" style="color: #64748b; text-align: center;">
-            <h3>Koi image upload nahi ki gayi</h3>
-            <p>Left side se image select karein shuru karne ke liye.</p>
-        </div>
+    <h2>3. टेक्स्ट सेटिंग</h2>
+
+    <label>टेक्स्ट लिखें</label>
+    <textarea id="textInput">हिंदी टेक्स्ट</textarea>
+
+    <label>फ़ॉन्ट चुनें</label>
+    <select id="fontSelect"></select>
+
+    <label>अपना Exact Font डालें (.ttf / .otf / .woff / .woff2)</label>
+    <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" />
+
+    <div class="row mt">
+      <div>
+        <label>साइज़</label>
+        <input type="number" id="fontSize" value="48" min="1" />
+      </div>
+      <div>
+        <label>टेक्स्ट कलर</label>
+        <input type="color" id="fontColor" value="#ffffff" />
+      </div>
     </div>
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const imageInput = document.getElementById('imageInput');
-        const textInput = document.getElementById('textInput');
-        const fontSelect = document.getElementById('fontSelect');
-        const fontSize = document.getElementById('fontSize');
-        const fontColor = document.getElementById('fontColor');
-        const addTextBtn = document.getElementById('addTextBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const placeholder = document.getElementById('placeholder');
-        const workspace = document.getElementById('workspace');
+    <div class="checkline">
+      <input type="checkbox" id="bold" />
+      <span>Bold</span>
+    </div>
 
-        let originalImage = new Image();
-        let isDrawing = false;
-        let startX, startY;
+    <div class="checkline">
+      <input type="checkbox" id="italic" />
+      <span>Italic</span>
+    </div>
 
-        // 1. Image Upload Logic
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+    <div class="row mt">
+      <div>
+        <label>Outline साइज़</label>
+        <input type="number" id="strokeSize" value="0" min="0" />
+      </div>
+      <div>
+        <label>Outline कलर</label>
+        <input type="color" id="strokeColor" value="#000000" />
+      </div>
+    </div>
 
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                originalImage = new Image();
-                originalImage.onload = () => {
-                    // Set canvas size to image size (HD Support)
-                    canvas.width = originalImage.width;
-                    canvas.height = originalImage.height;
-                    
-                    // Draw initial image
-                    ctx.drawImage(originalImage, 0, 0);
-                    
-                    canvas.style.display = 'block';
-                    placeholder.style.display = 'none';
-                };
-                originalImage.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
+    <div class="row mt">
+      <button id="addTextBtn" class="btn-success">+ टेक्स्ट जोड़ें</button>
+      <button id="deleteTextBtn" class="btn-danger">Delete टेक्स्ट</button>
+    </div>
 
-        // 2. Drawing/Selection Logic (Simulating Text Removal Area)
-        canvas.addEventListener('mousedown', (e) => {
-            if (!originalImage.src) return;
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            // Calculate scale factor because canvas might be displayed smaller via CSS
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
-            startX = (e.clientX - rect.left) * scaleX;
-            startY = (e.clientY - rect.top) * scaleY;
-        });
+    <button id="downloadBtn" class="mt">⬇️ HD PNG डाउनलोड करें</button>
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
-            const currentX = (e.clientX - rect.left) * scaleX;
-            const currentY = (e.clientY - rect.top) * scaleY;
+    <div class="help">
+      <b>कैसे इस्तेमाल करें?</b><br />
+      1. इमेज अपलोड करें।<br />
+      2. <b>🧽 टेक्स्ट हटाएँ</b> टूल चुनकर पुराने टेक्स्ट के ऊपर बॉक्स बनाएँ।<br />
+      3. <b>+ टेक्स्ट जोड़ें</b> दबाएँ, फिर टेक्स्ट को माउस/ऊँगली से ड्रैग करें।<br />
+      4. <b>🎨 कलर पिक</b> से इमेज का कलर उठाकर टेक्स्ट में लगाएँ।<br />
+      5. Exact font चाहिए तो फ़ॉन्ट फ़ाइल अपलोड करें।<br />
+      6. अंत में <b>HD PNG डाउनलोड</b> करें।
+    </div>
 
-            // Redraw original image first to clear previous rectangle
-            ctx.drawImage(originalImage, 0, 0);
+    <div class="small">
+      नोट: बिल्कुल same font automatic detection browser-only में 100% संभव नहीं है।
+      अगर आपको पता है कि कौन-सा फ़ॉन्ट है, तो उसकी .ttf/.otf/.woff फ़ाइल अपलोड कर दें।
+    </div>
+  </aside>
 
-            // Draw selection rectangle (Visual feedback)
-            ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
-        });
+  <main>
+    <div id="empty">
+      <h2>कोई इमेज अपलोड नहीं हुई</h2>
+      <p>
+        बाईं तरफ से इमेज अपलोड करें।<br />
+        यह टूल हिंदी टेक्स्ट, फ़ॉन्ट बदलने, टेक्स्ट हटाने और HD सेव करने के लिए बना है।
+      </p>
+    </div>
+    <canvas id="canvas" hidden></canvas>
+  </main>
 
-        canvas.addEventListener('mouseup', (e) => {
-            if (!isDrawing) return;
-            isDrawing = false;
-            
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
-            const endX = (e.clientX - rect.left) * scaleX;
-            const endY = (e.clientY - rect.top) * scaleY;
+  <script>
+    const $ = (id) => document.getElementById(id);
 
-            const width = Math.abs(endX - startX);
-            const height = Math.abs(endY - startY);
-            const x = Math.min(startX, endX);
-            const y = Math.min(startY, endY);
+    const canvas = $("canvas");
+    const ctx = canvas.getContext("2d");
 
-            // SIMULATE INPAINTING (Background Fill)
-            // Note: Real AI inpainting requires a backend API. 
-            // Here we use surrounding pixel averaging or simple fill for the prototype.
-            // For best results in this client-side code, we fill with a sampled color or white.
-            
-            // Strategy: Fill the selected area with a blurred version or solid color matching surroundings
-            // For simplicity and speed in this demo, we fill with a slight blur effect simulation or just clear it
-            // Let's try to sample the color from the top-left of the selection
-            
-            // Saving the area to restore later if needed is complex, so we just overwrite.
-            // Advanced approach: Use 'destination-out' or fill with average color.
-            
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(x, y, width, height);
-            ctx.clip();
-            
-            // Simple "Remove" logic: Fill with white or sampled color. 
-            // Since we don't have AI backend, user should ideally select a color or we assume white background for docs.
-            // Better approach for generic images: Blur the specific region.
-            
-            // Let's implement a basic blur simulation by drawing the image again but offset slightly? 
-            // No, that looks bad. Let's stick to "Content Aware Fill" simulation using neighboring pixels is hard in JS without libraries.
-            // WORKAROUND: We will just fill it with White (common for documents) or let user choose "Brush Color" to paint over.
-            // IMPROVEMENT: Let's just fill it with the average color of the boundary.
-            
-            // For this "World Best" request, let's assume the user wants to cover text.
-            // We will fill it with WHITE by default (best for documents), but add a note.
-            ctx.fillStyle = "#ffffff"; 
-            ctx.fillRect(x, y, width, height);
-            
-            ctx.restore();
-        });
+    const base = document.createElement("canvas");
+    const bctx = base.getContext("2d");
 
-        // 3. Add Text Logic
-        addTextBtn.addEventListener('click', () => {
-            if (!originalImage.src) {
-                alert("Pehle image upload karein!");
-                return;
-            }
-            
-            const text = textInput.value;
-            if (!text) {
-                alert("Kripya kuch text likhein.");
-                return;
-            }
+    const empty = $("empty");
 
-            const font = fontSelect.value;
-            const size = fontSize.value;
-            const color = fontColor.value;
+    let texts = [];
+    let selected = -1;
+    let mode = "select";
 
-            ctx.font = `${size}px ${font}`;
-            ctx.fillStyle = color;
-            ctx.textBaseline = 'top';
+    let eraseStart = null;
+    let eraseRect = null;
 
-            // Center text roughly in the middle if no selection was made recently, 
-            // otherwise user needs to drag to position? 
-            // To make it easy: We will draw text at the center of the canvas for now, 
-            // OR allow clicking to place. Let's do Click to Place.
-            
-            alert("Ab image par click karein jahan text rakhna hai!");
-            
-            const placeTextHandler = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                
-                const clickX = (e.clientX - rect.left) * scaleX;
-                const clickY = (e.clientY - rect.top) * scaleY;
+    let dragging = false;
+    let dragOff = { x: 0, y: 0 };
 
-                ctx.fillText(text, clickX, clickY);
-                
-                canvas.removeEventListener('click', placeTextHandler);
-            };
-            
-            canvas.addEventListener('click', placeTextHandler, { once: true });
-        });
+    let history = [];
 
-        // 4. Download HD Logic
-        downloadBtn.addEventListener('click', () => {
-            if (!originalImage.src) return;
-            
-            const link = document.createElement('a');
-            link.download = 'edited-image-hd.png';
-            link.href = canvas.toDataURL('image/png', 1.0); // 1.0 = Max Quality
-            link.click();
-        });
+    const current = {
+      text: "हिंदी टेक्स्ट",
+      font: '"Noto Sans Devanagari", sans-serif',
+      size: 48,
+      color: "#ffffff",
+      bold: false,
+      italic: false,
+      strokeSize: 0,
+      strokeColor: "#000000"
+    };
 
-    </script>
+    const fonts = [
+      { label: "Noto Sans Devanagari", value: '"Noto Sans Devanagari", sans-serif' },
+      { label: "Noto Serif Devanagari", value: '"Noto Serif Devanagari", serif' },
+      { label: "Baloo 2", value: '"Baloo 2", cursive' },
+      { label: "Hind", value: '"Hind", sans-serif' },
+      { label: "Mukta", value: '"Mukta", sans-serif' },
+      { label: "Kalam", value: '"Kalam", cursive' },
+      { label: "Khand", value: '"Khand", sans-serif' },
+      { label: "Rozha One", value: '"Rozha One", serif' },
+      { label: "Yatra One", value: '"Yatra One", cursive' },
+      { label: "Tiro Devanagari Hindi", value: '"Tiro Devanagari Hindi", serif' },
+      { label: "Martel", value: '"Martel", serif' },
+      { label: "Palanquin", value: '"Palanquin", sans-serif' },
+      { label: "Arial", value: "Arial, sans-serif" },
+      { label: "Georgia", value: "Georgia, serif" },
+      { label: "Impact", value: "Impact, sans-serif" }
+    ];
+
+    const fontSelect = $("fontSelect");
+
+    function addFontOption(label, value) {
+      const exists = [...fontSelect.options].some(o => o.value === value);
+      if (exists) return;
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      fontSelect.appendChild(opt);
+    }
+
+    fonts.forEach(f => addFontOption(f.label, f.value));
+    fontSelect.value = current.font;
+
+    function fontString(t) {
+      return `${t.italic ? "italic " : ""}${t.bold ? "bold " : ""}${t.size}px ${t.font}`;
+    }
+
+    function textBox(t) {
+      ctx.save();
+      ctx.font = fontString(t);
+
+      const lines = String(t.text || "").split("\n");
+      let maxW = 0;
+
+      for (const line of lines) {
+        maxW = Math.max(maxW, ctx.measureText(line).width);
+      }
+
+      ctx.restore();
+
+      const lineHeight = t.size * 1.35;
+
+      return {
+        x: t.x - 8,
+        y: t.y - t.size * 1.18,
+        w: maxW + 16,
+        h: lines.length * lineHeight + t.size * 0.45
+      };
+    }
+
+    function drawText(t, isSelected) {
+      ctx.save();
+      ctx.font = fontString(t);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+
+      const lines = String(t.text || "").split("\n");
+      const lineHeight = t.size * 1.35;
+
+      lines.forEach((line, i) => {
+        const y = t.y + i * lineHeight;
+
+        if (t.strokeSize > 0) {
+          ctx.lineWidth = t.strokeSize;
+          ctx.strokeStyle = t.strokeColor;
+          ctx.lineJoin = "round";
+          ctx.strokeText(line, t.x, y);
+        }
+
+        ctx.fillStyle = t.color;
+        ctx.fillText(line, t.x, y);
+      });
+
+      if (isSelected) {
+        const b = textBox(t);
+        ctx.strokeStyle = "#22c55e";
+        ctx.lineWidth = Math.max(2, canvas.width / 700);
+        ctx.setLineDash([10, 7]);
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+      }
+
+      ctx.restore();
+    }
+
+    function render() {
+      if (!base.width || !base.height) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(base, 0, 0);
+
+      texts.forEach((t, i) => drawText(t, i === selected));
+
+      if (eraseRect) {
+        ctx.save();
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = Math.max(2, canvas.width / 500);
+        ctx.setLineDash([10, 7]);
+        ctx.strokeRect(eraseRect.x, eraseRect.y, eraseRect.w, eraseRect.h);
+        ctx.restore();
+      }
+    }
+
+    function saveHistory() {
+      if (!base.width) return;
+
+      const snap = document.createElement("canvas");
+      snap.width = base.width;
+      snap.height = base.height;
+      snap.getContext("2d").drawImage(base, 0, 0);
+
+      history.push(snap);
+      if (history.length > 6) history.shift();
+    }
+
+    function rgb(c) {
+      return `rgb(${c.r | 0}, ${c.g | 0}, ${c.b | 0})`;
+    }
+
+    function dist(a, b) {
+      return Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b);
+    }
+
+    function avgColor(arr) {
+      let r = 0, g = 0, b = 0;
+      arr.forEach(c => {
+        r += c.r;
+        g += c.g;
+        b += c.b;
+      });
+      const n = arr.length || 1;
+      return { r: r / n, g: g / n, b: b / n };
+    }
+
+    function avgArea(x, y, w, h) {
+      x = Math.floor(x);
+      y = Math.floor(y);
+      w = Math.floor(w);
+      h = Math.floor(h);
+
+      if (x < 0) {
+        w += x;
+        x = 0;
+      }
+
+      if (y < 0) {
+        h += y;
+        y = 0;
+      }
+
+      if (x >= base.width || y >= base.height || w <= 0 || h <= 0) return null;
+
+      w = Math.min(w, base.width - x);
+      h = Math.min(h, base.height - y);
+
+      const d = bctx.getImageData(x, y, w, h).data;
+      let r = 0, g = 0, b = 0, n = 0;
+
+      for (let i = 0; i < d.length; i += 4) {
+        r += d[i];
+        g += d[i + 1];
+        b += d[i + 2];
+        n++;
+      }
+
+      if (!n) return null;
+
+      return { r: r / n, g: g / n, b: b / n };
+    }
+
+    function applyMagicFill(r) {
+      const x = Math.max(0, Math.floor(r.x));
+      const y = Math.max(0, Math.floor(r.y));
+      const w = Math.min(base.width - x, Math.floor(r.w));
+      const h = Math.min(base.height - y, Math.floor(r.h));
+
+      if (w <= 0 || h <= 0) return;
+
+      saveHistory();
+
+      const th = Math.max(4, Math.floor(Math.min(w, h) * 0.16));
+
+      const top = avgArea(x, y - th, w, th);
+      const bottom = avgArea(x, y + h, w, th);
+      const left = avgArea(x - th, y, th, h);
+      const right = avgArea(x + w, y, th, h);
+
+      const samples = [top, bottom, left, right].filter(Boolean);
+
+      if (!samples.length) {
+        bctx.fillStyle = "#ffffff";
+        bctx.fillRect(x, y, w, h);
+        return;
+      }
+
+      const solid = avgColor(samples);
+
+      const tb = top && bottom ? dist(top, bottom) : 0;
+      const lr = left && right ? dist(left, right) : 0;
+
+      let fill = rgb(solid);
+
+      if (tb > 18 && top && bottom && tb >= lr) {
+        const g = bctx.createLinearGradient(0, y, 0, y + h);
+        g.addColorStop(0, rgb(top));
+        g.addColorStop(1, rgb(bottom));
+        fill = g;
+      } else if (lr > 18 && left && right) {
+        const g = bctx.createLinearGradient(x, 0, x + w, 0);
+        g.addColorStop(0, rgb(left));
+        g.addColorStop(1, rgb(right));
+        fill = g;
+      }
+
+      bctx.fillStyle = fill;
+      bctx.fillRect(x, y, w, h);
+    }
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function normRect(a, b) {
+      return {
+        x: Math.min(a.x, b.x),
+        y: Math.min(a.y, b.y),
+        w: Math.abs(a.x - b.x),
+        h: Math.abs(a.y - b.y)
+      };
+    }
+
+    function setMode(m) {
+      mode = m;
+
+      document.querySelectorAll(".tool").forEach(btn => btn.classList.remove("active"));
+
+      if (m === "select") $("modeSelect").classList.add("active");
+      if (m === "erase") $("modeErase").classList.add("active");
+      if (m === "pick") $("modePick").classList.add("active");
+
+      canvas.style.cursor = m === "select" ? "move" : "crosshair";
+    }
+
+    function refreshControls() {
+      const t = selected >= 0 ? texts[selected] : current;
+
+      $("textInput").value = t.text;
+      fontSelect.value = t.font;
+      $("fontSize").value = t.size;
+      $("fontColor").value = t.color;
+      $("bold").checked = !!t.bold;
+      $("italic").checked = !!t.italic;
+      $("strokeSize").value = t.strokeSize;
+      $("strokeColor").value = t.strokeColor;
+    }
+
+    function updateSelected(prop, value) {
+      current[prop] = value;
+      if (selected >= 0) {
+        texts[selected][prop] = value;
+      }
+      render();
+    }
+
+    $("modeSelect").onclick = () => setMode("select");
+    $("modeErase").onclick = () => setMode("erase");
+    $("modePick").onclick = () => setMode("pick");
+
+    $("undoBtn").onclick = () => {
+      if (!history.length) return;
+
+      const snap = history.pop();
+      bctx.clearRect(0, 0, base.width, base.height);
+      bctx.drawImage(snap, 0, 0);
+      render();
+    };
+
+    $("imgInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = () => {
+        base.width = img.naturalWidth;
+        base.height = img.naturalHeight;
+
+        canvas.width = base.width;
+        canvas.height = base.height;
+
+        bctx.clearRect(0, 0, base.width, base.height);
+        bctx.drawImage(img, 0, 0);
+
+        canvas.hidden = false;
+        empty.style.display = "none";
+
+        texts = [];
+        selected = -1;
+        history = [];
+        eraseStart = null;
+        eraseRect = null;
+
+        refreshControls();
+        render();
+
+        URL.revokeObjectURL(url);
+      };
+
+      img.src = url;
+    });
+
+    $("textInput").addEventListener("input", (e) => {
+      updateSelected("text", e.target.value);
+    });
+
+    fontSelect.addEventListener("change", (e) => {
+      updateSelected("font", e.target.value);
+    });
+
+    $("fontSize").addEventListener("input", (e) => {
+      updateSelected("size", Number(e.target.value) || 20);
+    });
+
+    $("fontColor").addEventListener("input", (e) => {
+      updateSelected("color", e.target.value);
+    });
+
+    $("bold").addEventListener("change", (e) => {
+      updateSelected("bold", e.target.checked);
+    });
+
+    $("italic").addEventListener("change", (e) => {
+      updateSelected("italic", e.target.checked);
+    });
+
+    $("strokeSize").addEventListener("input", (e) => {
+      updateSelected("strokeSize", Number(e.target.value) || 0);
+    });
+
+    $("strokeColor").addEventListener("input", (e) => {
+      updateSelected("strokeColor", e.target.value);
+    });
+
+    $("addTextBtn").onclick = () => {
+      if (!base.width) {
+        alert("पहले इमेज अपलोड करें।");
+        return;
+      }
+
+      const t = { ...current };
+      t.text = $("textInput").value || "हिंदी टेक्स्ट";
+
+      texts.push(t);
+      selected = texts.length - 1;
+
+      t.x = 0;
+      const b = textBox(t);
+
+      t.x = Math.max(20, (base.width - b.w) / 2);
+      t.y = Math.max(t.size * 1.3, (base.height - b.h) / 2 + t.size * 1.2);
+
+      refreshControls();
+      render();
+    };
+
+    $("deleteTextBtn").onclick = () => {
+      if (selected < 0) return;
+
+      texts.splice(selected, 1);
+      selected = -1;
+      refreshControls();
+      render();
+    };
+
+    $("downloadBtn").onclick = () => {
+      if (!base.width) {
+        alert("पहले इमेज अपलोड करें।");
+        return;
+      }
+
+      const a = document.createElement("a");
+      a.download = "hd-hindi-edited-image.png";
+      a.href = canvas.toDataURL("image/png", 1.0);
+      a.click();
+    };
+
+    $("fontFile").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const buffer = await file.arrayBuffer();
+
+        let name = file.name.replace(/\.[^.]+$/, "").trim();
+        name = name.replace(/[^\w\u0900-\u097F -]/g, "") || "CustomFont";
+
+        const face = new FontFace(name, buffer);
+        await face.load();
+
+        document.fonts.add(face);
+
+        const value = `"${name}", sans-serif`;
+        addFontOption(name, value);
+
+        fontSelect.value = value;
+        current.font = value;
+
+        if (selected >= 0) {
+          texts[selected].font = value;
+        }
+
+        render();
+      } catch (err) {
+        alert("फ़ॉन्ट लोड नहीं हुआ: " + err.message);
+      }
+
+      e.target.value = "";
+    });
+
+    canvas.addEventListener("pointerdown", (e) => {
+      if (!base.width) return;
+
+      const p = getPos(e);
+
+      if (mode === "erase") {
+        eraseStart = p;
+        eraseRect = null;
+        canvas.setPointerCapture(e.pointerId);
+        return;
+      }
+
+      if (mode === "pick") {
+        const x = Math.min(base.width - 1, Math.max(0, Math.floor(p.x)));
+        const y = Math.min(base.height - 1, Math.max(0, Math.floor(p.y)));
+
+        const d = bctx.getImageData(x, y, 1, 1).data;
+        const hex = "#" + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, "0")).join("");
+
+        $("fontColor").value = hex;
+        current.color = hex;
+
+        if (selected >= 0) {
+          texts[selected].color = hex;
+          render();
+        }
+
+        setMode("select");
+        return;
+      }
+
+      let idx = -1;
+
+      for (let i = texts.length - 1; i >= 0; i--) {
+        const b = textBox(texts[i]);
+
+        if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) {
+          idx = i;
+          break;
+        }
+      }
+
+      selected = idx;
+      refreshControls();
+
+      if (selected >= 0) {
+        dragging = true;
+        dragOff = {
+          x: p.x - texts[selected].x,
+          y: p.y - texts[selected].y
+        };
+        canvas.setPointerCapture(e.pointerId);
+      }
+
+      render();
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (!base.width) return;
+
+      const p = getPos(e);
+
+      if (mode === "erase" && eraseStart) {
+        eraseRect = normRect(eraseStart, p);
+        render();
+        return;
+      }
+
+      if (dragging && selected >= 0) {
+        texts[selected].x = p.x - dragOff.x;
+        texts[selected].y = p.y - dragOff.y;
+        render();
+      }
+    });
+
+    canvas.addEventListener("pointerup", () => {
+      if (mode === "erase") {
+        if (eraseRect && eraseRect.w > 4 && eraseRect.h > 4) {
+          applyMagicFill(eraseRect);
+        }
+
+        eraseStart = null;
+        eraseRect = null;
+        render();
+      }
+
+      dragging = false;
+    });
+
+    canvas.addEventListener("pointercancel", () => {
+      eraseStart = null;
+      eraseRect = null;
+      dragging = false;
+      render();
+    });
+
+    document.fonts.ready.then(() => {
+      render();
+    });
+
+    refreshControls();
+  </script>
 </body>
 </html>
