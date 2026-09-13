@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Best Image Text Editor</title>
+    <!-- Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #00cec9;
+            --bg: #1e272e;
+            --card: #2d3436;
+            --text: #dfe6e9;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .panel {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .canvas-panel { flex: 2; min-width: 300px; text-align: center; }
+        .text-panel { flex: 1; min-width: 250px; max-height: 600px; overflow-y: auto; }
+        
+        canvas {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 2px solid var(--primary);
+            background: #000;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            margin: 10px 5px;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .word-item {
+            background: #353b48;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--secondary);
+        }
+        .word-item span { font-size: 14px; word-break: break-all; }
+        .word-item input {
+            background: #2d3436;
+            border: 1px solid var(--primary);
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+            width: 60%;
+        }
+        .word-item button {
+            background: var(--secondary);
+            border: none;
+            color: black;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #loader {
+            display: none;
+            margin: 20px;
+            font-size: 18px;
+            color: var(--secondary);
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--secondary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <h1>🌟 World Best Image Text Editor 🌟</h1>
+    <p>Upload image, detect text, edit it, and download!</p>
+
+    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+    <button class="btn" onclick="document.getElementById('imageInput').click()">📂 Upload Image</button>
+    <button class="btn" id="downloadBtn" onclick="downloadImage()" disabled>💾 Download Edited Image</button>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>AI Text Detect kar raha hai... Please wait...</p>
+    </div>
+
+    <div class="container">
+        <div class="panel canvas-panel">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+        <div class="panel text-panel">
+            <h3>📝 Detected Text (Edit Here)</h3>
+            <div id="textList">
+                <p style="color: #888; text-align: center;">Image upload karne ke baad text yahan dikhega.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const imageInput = document.getElementById('imageInput');
+        const loader = document.getElementById('loader');
+        const textList = document.getElementById('textList');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        let originalImage = null;
+        let wordsData = []; // Store detected words and their bounding boxes
+
+        // 1. Image Upload Handler
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImage = img;
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Start OCR
+                    processImage(img);
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        });
+
+        // 2. OCR Processing (Tesseract.js)
+        async function processImage(img) {
+            loader.style.display = 'block';
+            textList.innerHTML = '';
+            wordsData = [];
+
+            try {
+                const result = await Tesseract.recognize(img, 'eng+hin', {
+                    logger: m => console.log(m) // Progress log
+                });
+                
+                const words = result.data.words;
+                
+                // Filter out low confidence words and empty spaces
+                wordsData = words.filter(w => w.confidence > 40 && w.text.trim() !== '');
+                
+                renderTextList();
+                drawCanvas();
+                downloadBtn.disabled = false;
+            } catch (error) {
+                console.error(error);
+                alert("Text detect karne mein error aaya. Please clear image try karein.");
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        // 3. Render Detected Text in Sidebar
+        function renderTextList() {
+            textList.innerHTML = '';
+            if (wordsData.length === 0) {
+                textList.innerHTML = '<p style="color: #888; text-align: center;">Koi text detect nahi hua.</p>';
+                return;
+            }
+
+            wordsData.forEach((word, index) => {
+                const div = document.createElement('div');
+                div.className = 'word-item';
+                
+                div.innerHTML = `
+                    <input type="text" id="input_${index}" value="${word.text}" />
+                    <button onclick="updateWord(${index})">Update</button>
+                `;
+                textList.appendChild(div);
+            });
+        }
+
+        // 4. Update Word Logic
+        window.updateWord = function(index) {
+            const input = document.getElementById(`input_${index}`);
+            wordsData[index].text = input.value;
+            drawCanvas();
+        }
+
+        // 5. Redraw Canvas with Edited Text
+        function drawCanvas() {
+            if (!originalImage) return;
+            
+            // Draw original image first
+            ctx.drawImage(originalImage, 0, 0);
+
+            // Loop through all words and replace them
+            wordsData.forEach(word => {
+                const { bbox, text } = word;
+                const x = bbox.x0;
+                const y = bbox.y0;
+                const w = bbox.x1 - bbox.x0;
+                const h = bbox.y1 - bbox.y0;
+
+                // A. Sample background color from the original image
+                const bgColor = getAverageColor(x, y, w, h);
+                
+                // B. Fill the bounding box with background color (erase old text)
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(x, y, w, h);
+
+                // C. Draw new text
+                ctx.fillStyle = '#000000'; // Default black text (can be improved with color sampling)
+                ctx.font = `bold ${h * 0.8}px Arial`;
+                ctx.textBaseline = 'top';
+                
+                // Adjust text position to fit nicely
+                const textY = y + (h * 0.1);
+                ctx.fillText(text, x, textY);
+            });
+        }
+
+        // Helper: Get average background color of a specific region
+        function getAverageColor(x, y, w, h) {
+            // Ensure coordinates are within bounds
+            x = Math.max(0, Math.floor(x));
+            y = Math.max(0, Math.floor(y));
+            w = Math.min(canvas.width - x, Math.ceil(w));
+            h = Math.min(canvas.height - y, Math.ceil(h));
+
+            if (w <= 0 || h <= 0) return '#ffffff';
+
+            const imageData = ctx.getImageData(x, y, w, h);
+            let r = 0, g = 0, b = 0, count = 0;
+
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                r += imageData.data[i];
+                g += imageData.data[i + 1];
+                b += imageData.data[i + 2];
+                count++;
+            }
+
+            r = Math.floor(r / count);
+            g = Math.floor(g / count);
+            b = Math.floor(b / count);
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // 6. Download Image
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'edited-image-world-best.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
